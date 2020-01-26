@@ -29,7 +29,8 @@ config = {
 #   'mysql+pymysql://dfsuser@dfsoilgas:fuelingUp!@207.191.10.212/dfsoilgas')
 
 type_to_keys = {
-  'inventory': ['inventoryId', 'itemId', 'price', 'merchantId']
+  'inventory': ['inventoryId', 'itemId', 'price', 'merchantId'],
+  'user': ['userId', 'userName', 'password', 'isMerchant', 'age']
 }
 
 def tuple_to_dict(type, t):
@@ -127,8 +128,8 @@ def getUserById(id, cursor):
   cursor.execute("SELECT * FROM users WHERE id =", id)
 
 def getUser(name, cursor):
-  cursor.execute("SELECT * FROM users where username = {}".format(name))
-  user = cursor.fetchall()
+  cursor.execute("SELECT * FROM users where username = '{}'".format(name))
+  user = cursor.fetchone()
   return user
 
 def getItemsById(id, cursor):
@@ -166,17 +167,26 @@ def getInventoryByMerchant(id):
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+  conn = mysql.connector.connect(**config)
+  cursor = conn.cursor()
+
   if request.method == 'POST':
 
-    data = request.form.to_dict(flat=True)
-    print(data)
-    name = data['username']
-    password = data['password']
+
+
+    # data = request.form.to_dict(flat=True)
+    # print(data)
+    name = request.args.get('username')
+    print(name)
+    password = request.args.get('password')
     # n = str(request.form['username'])
     # print(n)
-    user = getUser(name)
-    print("user")
-    print(user)
+    user = getUser(name, cursor)
+
+    userDict = tuple_to_dict('user', user)
+    del userDict['password']
+
+    return jsonify([userDict])
 
   # if user is not None:
     ## check if password matches one in database
