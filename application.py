@@ -29,7 +29,7 @@ config = {
 #   'mysql+pymysql://dfsuser@dfsoilgas:fuelingUp!@207.191.10.212/dfsoilgas')
 
 type_to_keys = {
-  'inventory': ['inventoryId', 'itemId', 'price', 'merchantId', 'imageUrl'],
+  'inventory': ['inventoryId', 'itemId', 'price', 'merchantId', 'quantity', 'name', 'imageUrl'],
   'user': ['userId', 'userName', 'password', 'isMerchant', 'age']
 }
 
@@ -138,6 +138,7 @@ def getItemsById(id, cursor):
 def getInventory(id, cursor):
   cursor.execute("SELECT * FROM inventory where merchantId = {};".format(id))
   rows = cursor.fetchall()
+  print(rows)
   print("Read", cursor.rowcount, "row(s) of data.")
   li = []
   for row in rows:
@@ -146,7 +147,9 @@ def getInventory(id, cursor):
     item = cursor.fetchall()[0]
     di = tuple_to_dict('inventory', row)
     di['itemId'] = item[0]
+    di['name'] = item[1]
     di['imageUrl'] = item[2]
+    del di['merchantId']
     li.append(di)
 
   return li
