@@ -5,7 +5,7 @@ import model
 import mysql.connector
 from mysql.connector import errorcode
 
-from flask import Blueprint, render_template, request, jsonify, Flask
+from flask import Blueprint, render_template, request, jsonify, Flask, abort
 from werkzeug.utils import redirect
 
 import ast, json
@@ -29,7 +29,7 @@ config = {
 #   'mysql+pymysql://dfsuser@dfsoilgas:fuelingUp!@207.191.10.212/dfsoilgas')
 
 type_to_keys = {
-  'inventory': ['inventoryId', 'itemId', 'price', 'merchantId'],
+  'inventory': ['inventoryId', 'itemId', 'price', 'merchantId', 'imageUrl'],
   'user': ['userId', 'userName', 'password', 'isMerchant', 'age']
 }
 
@@ -146,6 +146,7 @@ def getInventory(id, cursor):
     item = cursor.fetchall()[0]
     di = tuple_to_dict('inventory', row)
     di['itemId'] = item[0]
+    di['imageUrl'] = item[2]
     li.append(di)
 
   return li
@@ -171,25 +172,25 @@ def login():
   cursor = conn.cursor()
 
   if request.method == 'POST':
-
-
-
-    # data = request.form.to_dict(flat=True)
-    # print(data)
     name = request.args.get('username')
     print(name)
-    password = request.args.get('password')
-    # n = str(request.form['username'])
-    # print(n)
+
+    ## get user from the user name entered
     user = getUser(name, cursor)
 
-    userDict = tuple_to_dict('user', user)
-    del userDict['password']
+    password = user[2]
+    enteredPassword = request.args.get('password')
 
-    return jsonify([userDict])
+    if password == enteredPassword:
+      print("passwords match")
+      userDict = tuple_to_dict('user', user)
+      del userDict['password']
+      return jsonify([userDict])
 
-  # if user is not None:
-    ## check if password matches one in database
+    else:
+      print("invalid credentials")
+      return abort(400)
+
 
 
 if __name__ == '__main__':
